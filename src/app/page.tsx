@@ -1,103 +1,202 @@
-import Image from "next/image";
+'use client'
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { EmailImport } from "@/components/email-import"
+import { useState, useEffect } from "react"
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [emailThreads, setEmailThreads] = useState<any[]>([])
+  const [timelines, setTimelines] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const [threadsResponse, timelinesResponse] = await Promise.all([
+        fetch('/api/email-threads'),
+        fetch('/api/timelines')
+      ])
+
+      const threads = await threadsResponse.json()
+      const timelineData = await timelinesResponse.json()
+
+      setEmailThreads(threads)
+      setTimelines(timelineData)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleImportSuccess = (result: any) => {
+    setNotification({ type: 'success', message: `Successfully imported ${result.importedMessages} messages` })
+    fetchData() // Refresh the data
+    setTimeout(() => setNotification(null), 3000)
+  }
+
+  const handleImportError = (error: string) => {
+    setNotification({ type: 'error', message: error })
+    setTimeout(() => setNotification(null), 5000)
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold tracking-tight">Email Thread Manager</h1>
+          <p className="text-muted-foreground mt-2">
+            Transform email threads into beautiful, readable timelines
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {notification && (
+          <div className={`mb-4 p-4 rounded-lg ${notification.type === 'success'
+            ? 'bg-green-100 border border-green-400 text-green-700'
+            : 'bg-red-100 border border-red-400 text-red-700'
+            }`}>
+            {notification.message}
+          </div>
+        )}
+
+        <Tabs defaultValue="threads" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="threads">Email Threads</TabsTrigger>
+            <TabsTrigger value="timelines">Timelines</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="threads" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Email Threads</h2>
+              <div className="flex gap-2">
+                <EmailImport
+                  onImportSuccess={handleImportSuccess}
+                  onImportError={handleImportError}
+                />
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading email threads...</p>
+              </div>
+            ) : emailThreads.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No email threads found. Import your first email thread to get started!</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {emailThreads.map((thread) => (
+                  <Card key={thread.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg">{thread.subject}</CardTitle>
+                          <CardDescription>
+                            {thread.participants?.length || 0} participants • {thread._count?.messages || 0} messages
+                          </CardDescription>
+                        </div>
+                        <Badge variant="secondary">{thread._count?.messages || 0} messages</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center space-x-4">
+                        <Avatar>
+                          <AvatarFallback>
+                            {thread.participants?.[0]?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            {thread.participants?.[0]?.name || thread.participants?.[0]?.email || 'Unknown'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {thread.participants?.[0]?.email || 'No email'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(thread.updatedAt).toLocaleDateString()}
+                          </p>
+                          <div className="flex gap-1 mt-1">
+                            {thread.tags?.slice(0, 2).map((tag: any) => (
+                              <Badge key={tag.id} variant="outline" className="text-xs">
+                                {tag.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="timelines" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Timeline Views</h2>
+              <Button>Create Timeline</Button>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading timelines...</p>
+              </div>
+            ) : timelines.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No timelines found. Import email threads to generate timelines!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {timelines.map((timeline) => (
+                  <Card key={timeline.id}>
+                    <CardHeader>
+                      <CardTitle>{timeline.title}</CardTitle>
+                      <CardDescription>
+                        {timeline.description} • {timeline.events?.length || 0} events
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {timeline.events?.map((event: any, index: number) => (
+                          <div key={event.id}>
+                            <div className="flex items-center space-x-4">
+                              <div className={`w-3 h-3 rounded-full ${event.eventType === 'EMAIL_RECEIVED' ? 'bg-primary' :
+                                event.eventType === 'EMAIL_REPLIED' ? 'bg-green-500' :
+                                  event.eventType === 'EMAIL_FORWARDED' ? 'bg-yellow-500' :
+                                    'bg-gray-500'
+                                }`}></div>
+                              <div className="flex-1">
+                                <p className="font-medium">{event.title}</p>
+                                <p className="text-sm text-muted-foreground">{event.description}</p>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(event.timestamp).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {index < timeline.events.length - 1 && <Separator className="mt-4" />}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
-  );
+  )
 }

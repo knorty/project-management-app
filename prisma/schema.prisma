@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model EmailThread {
+  id           String             @id @default(cuid())
+  subject      String
+  threadId     String             @unique
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  projectId    String?
+  messages     EmailMessage[]
+  participants EmailParticipant[]
+  project      Project?           @relation(fields: [projectId], references: [id])
+  tags         ThreadTag[]
+  timelineView TimelineView?
+
+  @@map("email_threads")
+}
+
+model EmailMessage {
+  id              String            @id @default(cuid())
+  messageId       String            @unique
+  threadId        String
+  from            String
+  to              String[]
+  cc              String[]
+  bcc             String[]
+  subject         String
+  body            String
+  textBody        String?
+  timestamp       DateTime
+  isRead          Boolean           @default(false)
+  isForwarded     Boolean           @default(false)
+  isReplied       Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  parentMessageId String?
+  attachments     EmailAttachment[]
+  parentMessage   EmailMessage?     @relation("MessageReplies", fields: [parentMessageId], references: [id])
+  replies         EmailMessage[]    @relation("MessageReplies")
+  thread          EmailThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  timelineEvents  TimelineEvent[]
+
+  @@map("email_messages")
+}
+
+model EmailAttachment {
+  id          String       @id @default(cuid())
+  filename    String
+  contentType String
+  size        Int
+  url         String?
+  messageId   String
+  createdAt   DateTime     @default(now())
+  message     EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("email_attachments")
+}
+
+model EmailParticipant {
+  id        String          @id @default(cuid())
+  email     String
+  name      String?
+  role      ParticipantRole @default(TO)
+  threadId  String
+  createdAt DateTime        @default(now())
+  userId    String?
+  thread    EmailThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user      User?           @relation(fields: [userId], references: [id])
+
+  @@unique([email, threadId, role])
+  @@map("email_participants")
+}
+
+model ThreadTag {
+  id        String      @id @default(cuid())
+  name      String
+  color     String?
+  threadId  String
+  createdAt DateTime    @default(now())
+  thread    EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([name, threadId])
+  @@map("thread_tags")
+}
+
+model TimelineView {
+  id          String          @id @default(cuid())
+  threadId    String          @unique
+  title       String
+  description String?
+  isPublic    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  events      TimelineEvent[]
+  thread      EmailThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@map("timeline_views")
+}
+
+model TimelineEvent {
+  id          String        @id @default(cuid())
+  timelineId  String
+  messageId   String?
+  eventType   EventType
+  title       String
+  description String?
+  timestamp   DateTime
+  order       Int
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  message     EmailMessage? @relation(fields: [messageId], references: [id])
+  timeline    TimelineView  @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+
+  @@map("timeline_events")
+}
+
+model Project {
+  id           String          @id @default(cuid())
+  name         String
+  description  String?
+  status       ProjectState    @default(ACTIVE)
+  priority     Priority        @default(MEDIUM)
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  emailThreads EmailThread[]
+  statuses     ProjectStatus[]
+  tasks        Task[]
+
+  @@map("projects")
+}
+
+model ProjectStatus {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  color       String?
+  order       Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@unique([projectId, title])
+  @@map("project_statuses")
+}
+
+model Task {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  projectId   String
+  statusId    String
+  priority    Priority      @default(MEDIUM)
+  dueDate     DateTime?
+  assignedTo  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status      ProjectStatus @relation(fields: [statusId], references: [id])
+
+  @@map("tasks")
+}
+
+model User {
+  id               String             @id @default(cuid())
+  email            String             @unique
+  name             String?
+  avatar           String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  EmailParticipant EmailParticipant[]
+
+  @@map("users")
+}
+
+enum ParticipantRole {
+  FROM
+  TO
+  CC
+  BCC
+}
+
+enum EventType {
+  EMAIL_RECEIVED
+  EMAIL_SENT
+  EMAIL_REPLIED
+  EMAIL_FORWARDED
+  ATTACHMENT_ADDED
+  PARTICIPANT_ADDED
+  STATUS_CHANGED
+  CUSTOM
+}
+
+enum ProjectState {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+  ARCHIVED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
