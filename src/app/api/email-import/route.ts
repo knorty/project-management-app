@@ -67,7 +67,55 @@ export async function POST(request: NextRequest) {
                 emailData = parseApiIntegration(data)
                 break
             case 'manual':
-                emailData = data
+                // For manual entry, create participants from the message data
+                const participants = []
+                const seenEmails = new Set()
+
+                for (const message of data.messages) {
+                    // Add FROM participant
+                    if (message.from && !seenEmails.has(message.from)) {
+                        participants.push({ email: message.from, role: 'FROM' as const })
+                        seenEmails.add(message.from)
+                    }
+
+                    // Add TO participants
+                    if (message.to) {
+                        const toEmails = Array.isArray(message.to) ? message.to : [message.to]
+                        for (const email of toEmails) {
+                            if (email && !seenEmails.has(email)) {
+                                participants.push({ email, role: 'TO' as const })
+                                seenEmails.add(email)
+                            }
+                        }
+                    }
+
+                    // Add CC participants
+                    if (message.cc) {
+                        const ccEmails = Array.isArray(message.cc) ? message.cc : [message.cc]
+                        for (const email of ccEmails) {
+                            if (email && !seenEmails.has(email)) {
+                                participants.push({ email, role: 'CC' as const })
+                                seenEmails.add(email)
+                            }
+                        }
+                    }
+
+                    // Add BCC participants
+                    if (message.bcc) {
+                        const bccEmails = Array.isArray(message.bcc) ? message.bcc : [message.bcc]
+                        for (const email of bccEmails) {
+                            if (email && !seenEmails.has(email)) {
+                                participants.push({ email, role: 'BCC' as const })
+                                seenEmails.add(email)
+                            }
+                        }
+                    }
+                }
+
+                emailData = {
+                    ...data,
+                    participants
+                }
                 break
             default:
                 return NextResponse.json(

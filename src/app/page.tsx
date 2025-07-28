@@ -29,6 +29,8 @@ export default function Home() {
       const threads = await threadsResponse.json()
       const timelineData = await timelinesResponse.json()
 
+
+
       setEmailThreads(threads)
       setTimelines(timelineData)
     } catch (error) {
