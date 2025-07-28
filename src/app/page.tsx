@@ -109,32 +109,69 @@ export default function Home() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center space-x-4">
-                        <Avatar>
-                          <AvatarFallback>
-                            {thread.participants?.[0]?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            {thread.participants?.[0]?.name || thread.participants?.[0]?.email || 'Unknown'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {thread.participants?.[0]?.email || 'No email'}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(thread.updatedAt).toLocaleDateString()}
-                          </p>
-                          <div className="flex gap-1 mt-1">
-                            {thread.tags?.slice(0, 2).map((tag: any) => (
-                              <Badge key={tag.id} variant="outline" className="text-xs">
-                                {tag.name}
-                              </Badge>
-                            ))}
+                      <div className="space-y-4">
+                        {/* Main participant info */}
+                        <div className="flex items-center space-x-4">
+                          <Avatar>
+                            <AvatarFallback>
+                              {thread.participants?.[0]?.user?.name?.split(' ').map((n: string) => n[0]).join('') ||
+                                thread.participants?.[0]?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">
+                              {thread.participants?.[0]?.user?.name || thread.participants?.[0]?.name || 'Unknown User'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {thread.participants?.[0]?.email || 'No email'}
+                              {thread.participants?.[0]?.user && (
+                                <span className="ml-2 text-green-600">✓ Linked User</span>
+                              )}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(thread.updatedAt).toLocaleDateString()}
+                            </p>
+                            <div className="flex gap-1 mt-1">
+                              {thread.tags?.slice(0, 2).map((tag: any) => (
+                                <Badge key={tag.id} variant="outline" className="text-xs">
+                                  {tag.name}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
                         </div>
+
+                        {/* Participants list */}
+                        {thread.participants && thread.participants.length > 1 && (
+                          <div className="border-t pt-3">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">
+                              Participants ({thread.participants.length})
+                            </p>
+                            <div className="space-y-1">
+                              {thread.participants.slice(0, 3).map((participant: any) => (
+                                <div key={participant.id} className="flex items-center justify-between text-xs">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                                    <span className="font-medium">
+                                      {participant.user?.name || participant.name || 'Unknown'}
+                                    </span>
+                                    <span className="text-muted-foreground">({participant.role})</span>
+                                  </div>
+                                  <span className="text-muted-foreground">
+                                    {participant.user ? '✓ Linked' : '⚠ Not Linked'}
+                                  </span>
+                                </div>
+                              ))}
+                              {thread.participants.length > 3 && (
+                                <div className="text-xs text-muted-foreground">
+                                  +{thread.participants.length - 3} more participants
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

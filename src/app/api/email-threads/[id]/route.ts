@@ -22,7 +22,11 @@ export async function GET(
                         }
                     }
                 },
-                participants: true,
+                participants: {
+                    include: {
+                        user: true
+                    }
+                },
                 tags: true,
                 timelineView: {
                     include: {
@@ -74,7 +78,11 @@ export async function PUT(
                 }
             },
             include: {
-                participants: true,
+                participants: {
+                    include: {
+                        user: true
+                    }
+                },
                 tags: true
             }
         })

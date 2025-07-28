@@ -11,7 +11,11 @@ export async function GET() {
                     },
                     take: 1 // Get the first message for preview
                 },
-                participants: true,
+                participants: {
+                    include: {
+                        user: true
+                    }
+                },
                 tags: true,
                 _count: {
                     select: {
@@ -58,7 +62,11 @@ export async function POST(request: NextRequest) {
                 }
             },
             include: {
-                participants: true,
+                participants: {
+                    include: {
+                        user: true
+                    }
+                },
                 tags: true
             }
         })
