@@ -7,11 +7,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EmailImport } from "@/components/email-import"
+import { TimelineView } from "@/components/timeline-view"
 import { useState, useEffect } from "react"
 
 export default function Home() {
   const [emailThreads, setEmailThreads] = useState<any[]>([])
   const [timelines, setTimelines] = useState<any[]>([])
+  const [selectedTimeline, setSelectedTimeline] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
@@ -185,7 +187,17 @@ export default function Home() {
           <TabsContent value="timelines" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Timeline Views</h2>
-              <Button>Create Timeline</Button>
+              <div className="flex gap-2">
+                {selectedTimeline && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedTimeline(null)}
+                  >
+                    Back to List
+                  </Button>
+                )}
+                <Button>Create Timeline</Button>
+              </div>
             </div>
 
             {isLoading ? (
@@ -196,37 +208,124 @@ export default function Home() {
               <div className="text-center py-8">
                 <p className="text-muted-foreground">No timelines found. Import email threads to generate timelines!</p>
               </div>
+            ) : selectedTimeline ? (
+              // Detailed Timeline View
+              <TimelineView timeline={selectedTimeline} />
             ) : (
-              <div className="space-y-4">
+              // Timeline List View
+              <div className="grid gap-6">
                 {timelines.map((timeline) => (
-                  <Card key={timeline.id}>
+                  <Card key={timeline.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedTimeline(timeline)}>
                     <CardHeader>
-                      <CardTitle>{timeline.title}</CardTitle>
-                      <CardDescription>
-                        {timeline.description} • {timeline.events?.length || 0} events
-                      </CardDescription>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg">{timeline.title}</CardTitle>
+                          <CardDescription>
+                            {timeline.description}
+                          </CardDescription>
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <span>{timeline.events?.length || 0} events</span>
+                            <span>•</span>
+                            <span>{timeline.thread?.participants?.length || 0} participants</span>
+                            <span>•</span>
+                            <span>{new Date(timeline.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <Badge variant={timeline.isPublic ? "default" : "secondary"}>
+                          {timeline.isPublic ? "Public" : "Private"}
+                        </Badge>
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {timeline.events?.map((event: any, index: number) => (
-                          <div key={event.id}>
-                            <div className="flex items-center space-x-4">
-                              <div className={`w-3 h-3 rounded-full ${event.eventType === 'EMAIL_RECEIVED' ? 'bg-primary' :
-                                event.eventType === 'EMAIL_REPLIED' ? 'bg-green-500' :
-                                  event.eventType === 'EMAIL_FORWARDED' ? 'bg-yellow-500' :
-                                    'bg-gray-500'
-                                }`}></div>
-                              <div className="flex-1">
-                                <p className="font-medium">{event.title}</p>
-                                <p className="text-sm text-muted-foreground">{event.description}</p>
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(event.timestamp).toLocaleDateString()}
-                              </span>
+                      {/* Thread Info Preview */}
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium">Thread:</span>
+                          <span className="text-sm text-muted-foreground">{timeline.thread?.subject}</span>
+                        </div>
+
+                        {/* Participants Preview */}
+                        {timeline.thread?.participants && timeline.thread.participants.length > 0 && (
+                          <div className="space-y-2">
+                            <span className="text-sm font-medium">Participants:</span>
+                            <div className="flex flex-wrap gap-2">
+                              {timeline.thread.participants.slice(0, 3).map((participant: any) => (
+                                <div key={participant.id} className="flex items-center space-x-2 text-xs">
+                                  <Avatar className="w-6 h-6">
+                                    <AvatarFallback>
+                                      {(participant.user?.name || participant.name || participant.email)
+                                        .split(' ')
+                                        .map((n: string) => n[0])
+                                        .join('')
+                                        .toUpperCase()
+                                        .slice(0, 2)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium">
+                                    {participant.user?.name || participant.name || participant.email}
+                                  </span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {participant.role}
+                                  </Badge>
+                                </div>
+                              ))}
+                              {timeline.thread.participants.length > 3 && (
+                                <span className="text-xs text-muted-foreground">
+                                  +{timeline.thread.participants.length - 3} more
+                                </span>
+                              )}
                             </div>
-                            {index < timeline.events.length - 1 && <Separator className="mt-4" />}
                           </div>
-                        ))}
+                        )}
+
+                        {/* Tags Preview */}
+                        {timeline.thread?.tags && timeline.thread.tags.length > 0 && (
+                          <div className="space-y-2">
+                            <span className="text-sm font-medium">Tags:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {timeline.thread.tags.slice(0, 3).map((tag: any) => (
+                                <Badge
+                                  key={tag.id}
+                                  style={{ backgroundColor: tag.color }}
+                                  className="text-white text-xs"
+                                >
+                                  {tag.name}
+                                </Badge>
+                              ))}
+                              {timeline.thread.tags.length > 3 && (
+                                <span className="text-xs text-muted-foreground">
+                                  +{timeline.thread.tags.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Events Preview */}
+                        {timeline.events && timeline.events.length > 0 && (
+                          <div className="space-y-2">
+                            <span className="text-sm font-medium">Recent Events:</span>
+                            <div className="space-y-1">
+                              {timeline.events.slice(0, 3).map((event: any) => (
+                                <div key={event.id} className="flex items-center space-x-2 text-xs">
+                                  <div className={`w-2 h-2 rounded-full ${event.eventType === 'EMAIL_RECEIVED' ? 'bg-blue-500' :
+                                      event.eventType === 'EMAIL_REPLIED' ? 'bg-green-500' :
+                                        event.eventType === 'EMAIL_FORWARDED' ? 'bg-yellow-500' :
+                                          'bg-gray-500'
+                                    }`}></div>
+                                  <span className="text-muted-foreground">{event.title}</span>
+                                  <span className="text-muted-foreground">•</span>
+                                  <span className="text-muted-foreground">{new Date(event.timestamp).toLocaleDateString()}</span>
+                                </div>
+                              ))}
+                              {timeline.events.length > 3 && (
+                                <div className="text-xs text-muted-foreground">
+                                  +{timeline.events.length - 3} more events
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

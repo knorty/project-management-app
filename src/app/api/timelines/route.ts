@@ -26,7 +26,9 @@ export async function GET() {
                                 id: true,
                                 subject: true,
                                 from: true,
-                                timestamp: true
+                                timestamp: true,
+                                body: true,
+                                textBody: true
                             }
                         }
                     }
