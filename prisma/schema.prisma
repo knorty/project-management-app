@@ -7,135 +7,67 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model EmailThread {
-  id           String             @id @default(cuid())
-  subject      String
-  threadId     String             @unique
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  projectId    String?
-  messages     EmailMessage[]
-  participants EmailParticipant[]
-  project      Project?           @relation(fields: [projectId], references: [id])
-  tags         ThreadTag[]
-  timelineView TimelineView?
-
-  @@map("email_threads")
-}
-
-model EmailMessage {
-  id              String            @id @default(cuid())
-  messageId       String            @unique
-  threadId        String
-  from            String
-  to              String[]
-  cc              String[]
-  bcc             String[]
-  subject         String
-  body            String
-  textBody        String?
-  timestamp       DateTime
-  isRead          Boolean           @default(false)
-  isForwarded     Boolean           @default(false)
-  isReplied       Boolean           @default(false)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  parentMessageId String?
-  attachments     EmailAttachment[]
-  parentMessage   EmailMessage?     @relation("MessageReplies", fields: [parentMessageId], references: [id])
-  replies         EmailMessage[]    @relation("MessageReplies")
-  thread          EmailThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  timelineEvents  TimelineEvent[]
-
-  @@map("email_messages")
-}
-
-model EmailAttachment {
-  id          String       @id @default(cuid())
-  filename    String
-  contentType String
-  size        Int
-  url         String?
-  messageId   String
-  createdAt   DateTime     @default(now())
-  message     EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  @@map("email_attachments")
-}
-
-model EmailParticipant {
-  id        String          @id @default(cuid())
-  email     String
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
   name      String?
-  role      ParticipantRole @default(TO)
-  threadId  String
-  createdAt DateTime        @default(now())
-  userId    String?
-  thread    EmailThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  user      User?           @relation(fields: [userId], references: [id])
+  avatar    String?
+  role      UserRole @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([email, threadId, role])
-  @@map("email_participants")
-}
+  // Relations
+  assignedTasks   Task[]          @relation("TaskAssignee")
+  projectMembers  ProjectMember[]
+  taskComments    TaskComment[]
+  taskActivities  TaskActivity[]
+  createdProjects Project[]       @relation("ProjectCreator")
+  createdTasks    Task[]          @relation("TaskCreator")
+  createdThreads  ProjectThread[] @relation("ThreadCreator")
+  threadMessages  ThreadMessage[]
 
-model ThreadTag {
-  id        String      @id @default(cuid())
-  name      String
-  color     String?
-  threadId  String
-  createdAt DateTime    @default(now())
-  thread    EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-
-  @@unique([name, threadId])
-  @@map("thread_tags")
-}
-
-model TimelineView {
-  id          String          @id @default(cuid())
-  threadId    String          @unique
-  title       String
-  description String?
-  isPublic    Boolean         @default(false)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  events      TimelineEvent[]
-  thread      EmailThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
-
-  @@map("timeline_views")
-}
-
-model TimelineEvent {
-  id          String        @id @default(cuid())
-  timelineId  String
-  messageId   String?
-  eventType   EventType
-  title       String
-  description String?
-  timestamp   DateTime
-  order       Int
-  metadata    Json?
-  createdAt   DateTime      @default(now())
-  message     EmailMessage? @relation(fields: [messageId], references: [id])
-  timeline    TimelineView  @relation(fields: [timelineId], references: [id], onDelete: Cascade)
-
-  @@map("timeline_events")
+  @@map("users")
 }
 
 model Project {
-  id           String          @id @default(cuid())
-  name         String
-  description  String?
-  status       ProjectState    @default(ACTIVE)
-  priority     Priority        @default(MEDIUM)
-  startDate    DateTime?
-  endDate      DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  emailThreads EmailThread[]
-  statuses     ProjectStatus[]
-  tasks        Task[]
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectState @default(ACTIVE)
+  priority    Priority     @default(MEDIUM)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  client      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   String
+  creator     User         @relation("ProjectCreator", fields: [createdBy], references: [id])
+
+  // Relations
+  members    ProjectMember[]
+  statuses   ProjectStatus[]
+  tasks      Task[]
+  tags       ProjectTag[]
+  milestones Milestone[]
+  threads    ProjectThread[]
 
   @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  projectId String
+  userId    String
+  role      ProjectRole @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_members")
 }
 
 model ProjectStatus {
@@ -146,66 +78,224 @@ model ProjectStatus {
   color       String?
   order       Int
   isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tasks       Task[]
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
 
   @@unique([projectId, title])
   @@map("project_statuses")
 }
 
+model ProjectTag {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, name])
+  @@map("project_tags")
+}
+
 model Task {
-  id          String        @id @default(cuid())
-  title       String
-  description String?
-  projectId   String
-  statusId    String
-  priority    Priority      @default(MEDIUM)
-  dueDate     DateTime?
-  assignedTo  String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  status      ProjectStatus @relation(fields: [statusId], references: [id])
+  id             String    @id @default(cuid())
+  title          String
+  description    String?
+  projectId      String
+  statusId       String
+  priority       Priority  @default(MEDIUM)
+  dueDate        DateTime?
+  estimatedHours Float?
+  actualHours    Float?
+  assignedTo     String?
+  createdBy      String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  project    Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status     ProjectStatus  @relation(fields: [statusId], references: [id])
+  assignee   User?          @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  creator    User           @relation("TaskCreator", fields: [createdBy], references: [id])
+  comments   TaskComment[]
+  activities TaskActivity[]
+  subtasks   Subtask[]
+  parentTask String?
+  parent     Task?          @relation("TaskSubtasks", fields: [parentTask], references: [id])
+  children   Task[]         @relation("TaskSubtasks")
+  tags       TaskTag[]
 
   @@map("tasks")
 }
 
-model User {
-  id               String             @id @default(cuid())
-  email            String             @unique
-  name             String?
-  avatar           String?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  EmailParticipant EmailParticipant[]
+model Subtask {
+  id          String   @id @default(cuid())
+  taskId      String
+  title       String
+  isCompleted Boolean  @default(false)
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@map("users")
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("subtasks")
 }
 
-enum ParticipantRole {
-  FROM
-  TO
-  CC
-  BCC
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("task_comments")
 }
 
-enum EventType {
-  EMAIL_RECEIVED
-  EMAIL_SENT
-  EMAIL_REPLIED
-  EMAIL_FORWARDED
-  ATTACHMENT_ADDED
-  PARTICIPANT_ADDED
-  STATUS_CHANGED
-  CUSTOM
+model TaskActivity {
+  id        String     @id @default(cuid())
+  taskId    String
+  userId    String
+  action    TaskAction
+  details   Json?
+  createdAt DateTime   @default(now())
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("task_activities")
+}
+
+model TaskTag {
+  id     String  @id @default(cuid())
+  taskId String
+  name   String
+  color  String?
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, name])
+  @@map("task_tags")
+}
+
+model Milestone {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  dueDate     DateTime
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("milestones")
+}
+
+model ProjectThread {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  isPinned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+  creator     User     @relation("ThreadCreator", fields: [createdBy], references: [id])
+
+  // Relations
+  project  Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  messages ThreadMessage[]
+  tags     ThreadTag[]
+
+  @@map("project_threads")
+}
+
+model ThreadMessage {
+  id        String   @id @default(cuid())
+  threadId  String
+  content   String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  parentId  String?
+
+  // Relations
+  thread      ProjectThread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent      ThreadMessage?     @relation("MessageReplies", fields: [parentId], references: [id])
+  replies     ThreadMessage[]    @relation("MessageReplies")
+  attachments ThreadAttachment[]
+
+  @@map("thread_messages")
+}
+
+model ThreadAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  filename  String
+  fileType  String
+  fileSize  Int
+  fileUrl   String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  message ThreadMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("thread_attachments")
+}
+
+model ThreadTag {
+  id        String   @id @default(cuid())
+  threadId  String
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  thread ProjectThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, name])
+  @@map("thread_tags")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum ProjectRole {
+  OWNER
+  MANAGER
+  MEMBER
+  VIEWER
 }
 
 enum ProjectState {
+  PLANNING
   ACTIVE
-  COMPLETED
   ON_HOLD
+  COMPLETED
   CANCELLED
   ARCHIVED
 }
@@ -215,4 +305,15 @@ enum Priority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum TaskAction {
+  CREATED
+  UPDATED
+  STATUS_CHANGED
+  ASSIGNED
+  COMMENTED
+  COMPLETED
+  REOPENED
+  DELETED
 }

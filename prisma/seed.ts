@@ -1,102 +1,179 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, UserRole, ProjectRole, ProjectState, Priority } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 async function main() {
-    console.log('🌱 Starting database seeding...')
+    console.log('🌱 Seeding database...')
 
-    // Clear existing data
-    await prisma.timelineEvent.deleteMany()
-    await prisma.timelineView.deleteMany()
-    await prisma.emailAttachment.deleteMany()
-    await prisma.emailMessage.deleteMany()
-    await prisma.emailParticipant.deleteMany()
-    await prisma.threadTag.deleteMany()
-    await prisma.emailThread.deleteMany()
-    await prisma.task.deleteMany()
-    await prisma.projectStatus.deleteMany()
-    await prisma.project.deleteMany()
-    await prisma.user.deleteMany()
-
-    console.log('🗑️  Cleared existing data')
-
-    // Create sample users
+    // Create users
     const users = await Promise.all([
         prisma.user.create({
             data: {
-                email: 'john.doe@company.com',
-                name: 'John Doe',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John'
+                email: 'alice@example.com',
+                name: 'Alice Johnson',
+                role: UserRole.ADMIN,
+                avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
             }
         }),
         prisma.user.create({
             data: {
-                email: 'alice.smith@company.com',
-                name: 'Alice Smith',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice'
+                email: 'bob@example.com',
+                name: 'Bob Smith',
+                role: UserRole.MANAGER,
+                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
             }
         }),
         prisma.user.create({
             data: {
-                email: 'bob.wilson@company.com',
-                name: 'Bob Wilson',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob'
+                email: 'carol@example.com',
+                name: 'Carol Davis',
+                role: UserRole.MEMBER,
+                avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
             }
         }),
         prisma.user.create({
             data: {
-                email: 'sarah.johnson@company.com',
-                name: 'Sarah Johnson',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah'
+                email: 'dave@example.com',
+                name: 'Dave Wilson',
+                role: UserRole.MEMBER,
+                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
             }
         })
     ])
 
-    console.log('👥 Created sample users')
+    console.log('✅ Created users')
 
-    // Create sample projects
+    // Create projects
     const projects = await Promise.all([
         prisma.project.create({
             data: {
-                name: 'Q4 Product Launch',
-                description: 'Launch of the new product features for Q4',
-                status: 'ACTIVE',
-                priority: 'HIGH',
-                startDate: new Date('2024-10-01'),
-                endDate: new Date('2024-12-31')
+                name: 'Website Redesign',
+                description: 'Complete redesign of the company website with modern UI/UX',
+                status: ProjectState.ACTIVE,
+                priority: Priority.HIGH,
+                startDate: new Date('2024-01-15'),
+                endDate: new Date('2024-04-15'),
+                budget: 25000,
+                client: 'Acme Corp',
+                createdBy: users[0].id
             }
         }),
         prisma.project.create({
             data: {
-                name: 'Client Portal Redesign',
-                description: 'Redesign of the client-facing portal',
-                status: 'ACTIVE',
-                priority: 'MEDIUM',
-                startDate: new Date('2024-11-01'),
-                endDate: new Date('2025-02-28')
+                name: 'Mobile App Development',
+                description: 'Develop a new mobile app for iOS and Android platforms',
+                status: ProjectState.PLANNING,
+                priority: Priority.MEDIUM,
+                startDate: new Date('2024-03-01'),
+                endDate: new Date('2024-08-01'),
+                budget: 50000,
+                client: 'TechStart Inc',
+                createdBy: users[1].id
+            }
+        }),
+        prisma.project.create({
+            data: {
+                name: 'Marketing Campaign',
+                description: 'Q2 marketing campaign for product launch',
+                status: ProjectState.ACTIVE,
+                priority: Priority.MEDIUM,
+                startDate: new Date('2024-02-01'),
+                endDate: new Date('2024-05-31'),
+                budget: 15000,
+                client: 'Internal',
+                createdBy: users[0].id
             }
         })
     ])
 
-    console.log('📋 Created sample projects')
+    console.log('✅ Created projects')
+
+    // Create project members
+    await Promise.all([
+        // Website Redesign team
+        prisma.projectMember.create({
+            data: {
+                projectId: projects[0].id,
+                userId: users[0].id,
+                role: ProjectRole.OWNER
+            }
+        }),
+        prisma.projectMember.create({
+            data: {
+                projectId: projects[0].id,
+                userId: users[1].id,
+                role: ProjectRole.MANAGER
+            }
+        }),
+        prisma.projectMember.create({
+            data: {
+                projectId: projects[0].id,
+                userId: users[2].id,
+                role: ProjectRole.MEMBER
+            }
+        }),
+        prisma.projectMember.create({
+            data: {
+                projectId: projects[0].id,
+                userId: users[3].id,
+                role: ProjectRole.MEMBER
+            }
+        }),
+
+        // Mobile App team
+        prisma.projectMember.create({
+            data: {
+                projectId: projects[1].id,
+                userId: users[1].id,
+                role: ProjectRole.OWNER
+            }
+        }),
+        prisma.projectMember.create({
+            data: {
+                projectId: projects[1].id,
+                userId: users[2].id,
+                role: ProjectRole.MEMBER
+            }
+        }),
+
+        // Marketing Campaign team
+        prisma.projectMember.create({
+            data: {
+                projectId: projects[2].id,
+                userId: users[0].id,
+                role: ProjectRole.OWNER
+            }
+        }),
+        prisma.projectMember.create({
+            data: {
+                projectId: projects[2].id,
+                userId: users[3].id,
+                role: ProjectRole.MEMBER
+            }
+        })
+    ])
+
+    console.log('✅ Created project members')
 
     // Create project statuses
-    const projectStatuses = await Promise.all([
+    const statuses = await Promise.all([
+        // Website Redesign statuses
         prisma.projectStatus.create({
             data: {
                 projectId: projects[0].id,
-                title: 'Planning',
-                description: 'Initial planning phase',
-                color: '#3B82F6',
-                order: 1
+                title: 'To Do',
+                description: 'Tasks that need to be started',
+                color: '#6B7280',
+                order: 1,
+                isDefault: true
             }
         }),
         prisma.projectStatus.create({
             data: {
                 projectId: projects[0].id,
                 title: 'In Progress',
-                description: 'Active development',
-                color: '#F59E0B',
+                description: 'Tasks currently being worked on',
+                color: '#3B82F6',
                 order: 2
             }
         }),
@@ -104,358 +181,612 @@ async function main() {
             data: {
                 projectId: projects[0].id,
                 title: 'Review',
-                description: 'Under review',
-                color: '#8B5CF6',
+                description: 'Tasks ready for review',
+                color: '#F59E0B',
                 order: 3
             }
         }),
         prisma.projectStatus.create({
             data: {
                 projectId: projects[0].id,
-                title: 'Completed',
-                description: 'Task completed',
+                title: 'Done',
+                description: 'Completed tasks',
                 color: '#10B981',
+                order: 4
+            }
+        }),
+
+        // Mobile App statuses
+        prisma.projectStatus.create({
+            data: {
+                projectId: projects[1].id,
+                title: 'Planning',
+                description: 'Tasks in planning phase',
+                color: '#8B5CF6',
+                order: 1,
+                isDefault: true
+            }
+        }),
+        prisma.projectStatus.create({
+            data: {
+                projectId: projects[1].id,
+                title: 'Development',
+                description: 'Tasks in development',
+                color: '#3B82F6',
+                order: 2
+            }
+        }),
+        prisma.projectStatus.create({
+            data: {
+                projectId: projects[1].id,
+                title: 'Testing',
+                description: 'Tasks in testing phase',
+                color: '#F59E0B',
+                order: 3
+            }
+        }),
+        prisma.projectStatus.create({
+            data: {
+                projectId: projects[1].id,
+                title: 'Deployed',
+                description: 'Tasks deployed to production',
+                color: '#10B981',
+                order: 4
+            }
+        }),
+
+        // Marketing Campaign statuses
+        prisma.projectStatus.create({
+            data: {
+                projectId: projects[2].id,
+                title: 'Draft',
+                description: 'Content in draft phase',
+                color: '#6B7280',
+                order: 1,
+                isDefault: true
+            }
+        }),
+        prisma.projectStatus.create({
+            data: {
+                projectId: projects[2].id,
+                title: 'In Review',
+                description: 'Content under review',
+                color: '#F59E0B',
+                order: 2
+            }
+        }),
+        prisma.projectStatus.create({
+            data: {
+                projectId: projects[2].id,
+                title: 'Approved',
+                description: 'Content approved and ready',
+                color: '#10B981',
+                order: 3
+            }
+        }),
+        prisma.projectStatus.create({
+            data: {
+                projectId: projects[2].id,
+                title: 'Published',
+                description: 'Content published',
+                color: '#059669',
                 order: 4
             }
         })
     ])
 
-    console.log('🏷️  Created project statuses')
+    console.log('✅ Created project statuses')
 
-    // Create sample email threads
-    const emailThreads = await Promise.all([
-        prisma.emailThread.create({
-            data: {
-                subject: 'Q4 Product Launch - Project Status Update',
-                threadId: 'thread_q4_launch_001',
-                projectId: projects[0].id,
-                participants: {
-                    create: [
-                        { email: 'john.doe@company.com', name: 'John Doe', role: 'FROM' },
-                        { email: 'alice.smith@company.com', name: 'Alice Smith', role: 'TO' },
-                        { email: 'bob.wilson@company.com', name: 'Bob Wilson', role: 'CC' },
-                        { email: 'sarah.johnson@company.com', name: 'Sarah Johnson', role: 'CC' }
-                    ]
-                },
-                tags: {
-                    create: [
-                        { name: 'urgent', color: '#EF4444' },
-                        { name: 'project', color: '#3B82F6' },
-                        { name: 'q4', color: '#10B981' }
-                    ]
-                }
-            }
-        }),
-        prisma.emailThread.create({
-            data: {
-                subject: 'Client Feedback - Portal Redesign Discussion',
-                threadId: 'thread_portal_feedback_002',
-                projectId: projects[1].id,
-                participants: {
-                    create: [
-                        { email: 'alice.smith@company.com', name: 'Alice Smith', role: 'FROM' },
-                        { email: 'john.doe@company.com', name: 'John Doe', role: 'TO' },
-                        { email: 'bob.wilson@company.com', name: 'Bob Wilson', role: 'TO' }
-                    ]
-                },
-                tags: {
-                    create: [
-                        { name: 'feedback', color: '#8B5CF6' },
-                        { name: 'client', color: '#F59E0B' },
-                        { name: 'design', color: '#06B6D4' }
-                    ]
-                }
-            }
-        }),
-        prisma.emailThread.create({
-            data: {
-                subject: 'Weekly Team Standup - Development Updates',
-                threadId: 'thread_standup_003',
-                participants: {
-                    create: [
-                        { email: 'bob.wilson@company.com', name: 'Bob Wilson', role: 'FROM' },
-                        { email: 'john.doe@company.com', name: 'John Doe', role: 'TO' },
-                        { email: 'alice.smith@company.com', name: 'Alice Smith', role: 'TO' },
-                        { email: 'sarah.johnson@company.com', name: 'Sarah Johnson', role: 'TO' }
-                    ]
-                },
-                tags: {
-                    create: [
-                        { name: 'standup', color: '#10B981' },
-                        { name: 'weekly', color: '#6B7280' }
-                    ]
-                }
-            }
-        })
-    ])
-
-    console.log('📧 Created sample email threads')
-
-    // Create sample email messages for the first thread
-    const message1 = await prisma.emailMessage.create({
-        data: {
-            messageId: 'msg_q4_launch_001',
-            threadId: emailThreads[0].id,
-            from: 'john.doe@company.com',
-            to: ['alice.smith@company.com'],
-            cc: ['bob.wilson@company.com', 'sarah.johnson@company.com'],
-            bcc: [],
-            subject: 'Q4 Product Launch - Project Status Update',
-            body: '<p>Hi team,</p><p>I wanted to provide an update on our Q4 product launch progress. We\'ve made significant strides in the development phase and are currently on track to meet our December deadline.</p><p>Key highlights:</p><ul><li>Core features are 80% complete</li><li>Testing phase begins next week</li><li>Marketing materials are being prepared</li></ul><p>Please review the attached project timeline and let me know if you have any questions.</p><p>Best regards,<br>John</p>',
-            textBody: 'Hi team, I wanted to provide an update on our Q4 product launch progress. We\'ve made significant strides in the development phase and are currently on track to meet our December deadline. Key highlights: Core features are 80% complete, Testing phase begins next week, Marketing materials are being prepared. Please review the attached project timeline and let me know if you have any questions. Best regards, John',
-            timestamp: new Date('2024-11-15T10:00:00Z'),
-            isRead: true,
-            isForwarded: false,
-            isReplied: false
-        }
-    })
-
-    const message2 = await prisma.emailMessage.create({
-        data: {
-            messageId: 'msg_q4_launch_002',
-            threadId: emailThreads[0].id,
-            from: 'alice.smith@company.com',
-            to: ['john.doe@company.com'],
-            cc: ['bob.wilson@company.com', 'sarah.johnson@company.com'],
-            bcc: [],
-            subject: 'Re: Q4 Product Launch - Project Status Update',
-            body: '<p>Thanks for the update, John!</p><p>The progress looks great. I have a few questions about the testing timeline:</p><ul><li>Will we have enough time for user acceptance testing?</li><li>Are we planning to do a beta release?</li></ul><p>Also, I\'ve attached the updated marketing requirements document.</p><p>Best,<br>Alice</p>',
-            textBody: 'Thanks for the update, John! The progress looks great. I have a few questions about the testing timeline: Will we have enough time for user acceptance testing? Are we planning to do a beta release? Also, I\'ve attached the updated marketing requirements document. Best, Alice',
-            timestamp: new Date('2024-11-15T14:30:00Z'),
-            isRead: true,
-            isForwarded: false,
-            isReplied: true,
-            parentMessageId: message1.id,
-            attachments: {
-                create: [
-                    {
-                        filename: 'marketing_requirements_v2.pdf',
-                        contentType: 'application/pdf',
-                        size: 2048576,
-                        url: 'https://example.com/files/marketing_requirements_v2.pdf'
-                    }
-                ]
-            }
-        }
-    })
-
-    const message3 = await prisma.emailMessage.create({
-        data: {
-            messageId: 'msg_q4_launch_003',
-            threadId: emailThreads[0].id,
-            from: 'john.doe@company.com',
-            to: ['alice.smith@company.com'],
-            cc: ['bob.wilson@company.com', 'sarah.johnson@company.com'],
-            bcc: [],
-            subject: 'Re: Q4 Product Launch - Project Status Update',
-            body: '<p>Great questions, Alice!</p><p>Yes, we\'ve allocated 2 weeks for UAT, which should be sufficient. And yes, we\'re planning a beta release to select customers in the first week of December.</p><p>I\'ve reviewed the marketing requirements - they look comprehensive. Bob, can you confirm the technical requirements are aligned?</p><p>Thanks,<br>John</p>',
-            textBody: 'Great questions, Alice! Yes, we\'ve allocated 2 weeks for UAT, which should be sufficient. And yes, we\'re planning a beta release to select customers in the first week of December. I\'ve reviewed the marketing requirements - they look comprehensive. Bob, can you confirm the technical requirements are aligned? Thanks, John',
-            timestamp: new Date('2024-11-15T16:45:00Z'),
-            isRead: true,
-            isForwarded: false,
-            isReplied: true,
-            parentMessageId: message2.id
-        }
-    })
-
-    const messages1 = [message1, message2, message3]
-
-    // Create sample email messages for the second thread
-    const message4 = await prisma.emailMessage.create({
-        data: {
-            messageId: 'msg_portal_feedback_001',
-            threadId: emailThreads[1].id,
-            from: 'alice.smith@company.com',
-            to: ['john.doe@company.com', 'bob.wilson@company.com'],
-            cc: [],
-            bcc: [],
-            subject: 'Client Feedback - Portal Redesign Discussion',
-            body: '<p>Hi John and Bob,</p><p>I just received feedback from our key client about the portal redesign. They\'re very impressed with the new interface but have some suggestions for the dashboard layout.</p><p>Key feedback points:</p><ul><li>Dashboard needs more customization options</li><li>Mobile responsiveness is excellent</li><li>Would like to see more data visualization options</li></ul><p>I\'ve attached their detailed feedback document.</p><p>Best,<br>Alice</p>',
-            textBody: 'Hi John and Bob, I just received feedback from our key client about the portal redesign. They\'re very impressed with the new interface but have some suggestions for the dashboard layout. Key feedback points: Dashboard needs more customization options, Mobile responsiveness is excellent, Would like to see more data visualization options. I\'ve attached their detailed feedback document. Best, Alice',
-            timestamp: new Date('2024-11-14T09:15:00Z'),
-            isRead: true,
-            isForwarded: false,
-            isReplied: false,
-            attachments: {
-                create: [
-                    {
-                        filename: 'client_feedback_portal.pdf',
-                        contentType: 'application/pdf',
-                        size: 1536000,
-                        url: 'https://example.com/files/client_feedback_portal.pdf'
-                    }
-                ]
-            }
-        }
-    })
-
-    const message5 = await prisma.emailMessage.create({
-        data: {
-            messageId: 'msg_portal_feedback_002',
-            threadId: emailThreads[1].id,
-            from: 'bob.wilson@company.com',
-            to: ['alice.smith@company.com', 'john.doe@company.com'],
-            cc: [],
-            bcc: [],
-            subject: 'Re: Client Feedback - Portal Redesign Discussion',
-            body: '<p>Thanks for sharing this, Alice!</p><p>The feedback is very valuable. I think we can definitely implement the customization options and data visualization features they\'re requesting.</p><p>I\'ll create a technical specification document for these new features and share it with the team.</p><p>Bob</p>',
-            textBody: 'Thanks for sharing this, Alice! The feedback is very valuable. I think we can definitely implement the customization options and data visualization features they\'re requesting. I\'ll create a technical specification document for these new features and share it with the team. Bob',
-            timestamp: new Date('2024-11-14T11:30:00Z'),
-            isRead: true,
-            isForwarded: false,
-            isReplied: true,
-            parentMessageId: message4.id
-        }
-    })
-
-    const messages2 = [message4, message5]
-
-    console.log('💬 Created sample email messages')
-
-    // Create timeline views
-    const timelineViews = await Promise.all([
-        prisma.timelineView.create({
-            data: {
-                threadId: emailThreads[0].id,
-                title: 'Q4 Launch Project Timeline',
-                description: 'Visual timeline of the Q4 product launch discussion',
-                isPublic: true
-            }
-        }),
-        prisma.timelineView.create({
-            data: {
-                threadId: emailThreads[1].id,
-                title: 'Portal Redesign Feedback Timeline',
-                description: 'Timeline of client feedback and responses',
-                isPublic: false
-            }
-        })
-    ])
-
-    console.log('📊 Created timeline views')
-
-    // Create timeline events
-    const timelineEvents = await Promise.all([
-        // Events for Q4 Launch timeline
-        prisma.timelineEvent.create({
-            data: {
-                timelineId: timelineViews[0].id,
-                messageId: messages1[0].id,
-                eventType: 'EMAIL_RECEIVED',
-                title: 'Project Status Update Sent',
-                description: 'John sent the initial project status update to the team',
-                timestamp: new Date('2024-11-15T10:00:00Z'),
-                order: 1,
-                metadata: { sender: 'John Doe', recipients: 4 }
-            }
-        }),
-        prisma.timelineEvent.create({
-            data: {
-                timelineId: timelineViews[0].id,
-                messageId: messages1[1].id,
-                eventType: 'EMAIL_REPLIED',
-                title: 'Alice Responded with Questions',
-                description: 'Alice replied with questions about testing timeline and attached marketing requirements',
-                timestamp: new Date('2024-11-15T14:30:00Z'),
-                order: 2,
-                metadata: { sender: 'Alice Smith', attachments: 1 }
-            }
-        }),
-        prisma.timelineEvent.create({
-            data: {
-                timelineId: timelineViews[0].id,
-                messageId: messages1[2].id,
-                eventType: 'EMAIL_REPLIED',
-                title: 'John Provided Answers',
-                description: 'John answered Alice\'s questions about UAT and beta release plans',
-                timestamp: new Date('2024-11-15T16:45:00Z'),
-                order: 3,
-                metadata: { sender: 'John Doe', confirmedUAT: true, confirmedBeta: true }
-            }
-        }),
-        // Events for Portal Feedback timeline
-        prisma.timelineEvent.create({
-            data: {
-                timelineId: timelineViews[1].id,
-                messageId: messages2[0].id,
-                eventType: 'EMAIL_RECEIVED',
-                title: 'Client Feedback Received',
-                description: 'Alice shared client feedback about portal redesign',
-                timestamp: new Date('2024-11-14T09:15:00Z'),
-                order: 1,
-                metadata: { sender: 'Alice Smith', feedbackType: 'positive', attachments: 1 }
-            }
-        }),
-        prisma.timelineEvent.create({
-            data: {
-                timelineId: timelineViews[1].id,
-                messageId: messages2[1].id,
-                eventType: 'EMAIL_REPLIED',
-                title: 'Bob Acknowledged Feedback',
-                description: 'Bob acknowledged the feedback and committed to creating technical specifications',
-                timestamp: new Date('2024-11-14T11:30:00Z'),
-                order: 2,
-                metadata: { sender: 'Bob Wilson', actionRequired: 'technical_specs' }
-            }
-        })
-    ])
-
-    console.log('📅 Created timeline events')
-
-    // Create sample tasks
+    // Create tasks
     const tasks = await Promise.all([
+        // Website Redesign tasks
         prisma.task.create({
             data: {
-                title: 'Complete Core Features Development',
-                description: 'Finish the remaining 20% of core features for Q4 launch',
+                title: 'Design Homepage',
+                description: 'Create new homepage design with modern layout and improved UX',
                 projectId: projects[0].id,
-                statusId: projectStatuses[1].id, // In Progress
-                priority: 'HIGH',
-                dueDate: new Date('2024-11-30'),
-                assignedTo: 'bob.wilson@company.com'
+                statusId: statuses[2].id, // In Progress
+                priority: Priority.HIGH,
+                dueDate: new Date('2024-02-15'),
+                estimatedHours: 16,
+                actualHours: 12,
+                assignedTo: users[2].id,
+                createdBy: users[0].id
             }
         }),
         prisma.task.create({
             data: {
-                title: 'Prepare Marketing Materials',
-                description: 'Create marketing materials for the Q4 product launch',
+                title: 'Implement Navigation',
+                description: 'Build responsive navigation component with mobile menu',
                 projectId: projects[0].id,
-                statusId: projectStatuses[0].id, // Planning
-                priority: 'MEDIUM',
-                dueDate: new Date('2024-12-15'),
-                assignedTo: 'alice.smith@company.com'
+                statusId: statuses[1].id, // To Do
+                priority: Priority.MEDIUM,
+                dueDate: new Date('2024-02-28'),
+                estimatedHours: 8,
+                assignedTo: users[3].id,
+                createdBy: users[1].id
             }
         }),
         prisma.task.create({
             data: {
-                title: 'Implement Dashboard Customization',
-                description: 'Add customization options to the portal dashboard based on client feedback',
+                title: 'Content Migration',
+                description: 'Migrate existing content to new CMS structure',
+                projectId: projects[0].id,
+                statusId: statuses[0].id, // To Do
+                priority: Priority.LOW,
+                dueDate: new Date('2024-03-10'),
+                estimatedHours: 20,
+                assignedTo: users[2].id,
+                createdBy: users[0].id
+            }
+        }),
+        prisma.task.create({
+            data: {
+                title: 'SEO Optimization',
+                description: 'Optimize website for search engines',
+                projectId: projects[0].id,
+                statusId: statuses[3].id, // Done
+                priority: Priority.MEDIUM,
+                dueDate: new Date('2024-02-10'),
+                estimatedHours: 6,
+                actualHours: 6,
+                assignedTo: users[1].id,
+                createdBy: users[0].id
+            }
+        }),
+
+        // Mobile App tasks
+        prisma.task.create({
+            data: {
+                title: 'App Architecture Design',
+                description: 'Design the overall app architecture and data flow',
                 projectId: projects[1].id,
-                statusId: projectStatuses[0].id, // Planning
-                priority: 'HIGH',
-                dueDate: new Date('2025-01-15'),
-                assignedTo: 'bob.wilson@company.com'
+                statusId: statuses[4].id, // Planning
+                priority: Priority.HIGH,
+                dueDate: new Date('2024-03-15'),
+                estimatedHours: 24,
+                assignedTo: users[1].id,
+                createdBy: users[1].id
+            }
+        }),
+        prisma.task.create({
+            data: {
+                title: 'UI/UX Design',
+                description: 'Create app wireframes and design mockups',
+                projectId: projects[1].id,
+                statusId: statuses[4].id, // Planning
+                priority: Priority.HIGH,
+                dueDate: new Date('2024-03-20'),
+                estimatedHours: 32,
+                assignedTo: users[2].id,
+                createdBy: users[1].id
+            }
+        }),
+
+        // Marketing Campaign tasks
+        prisma.task.create({
+            data: {
+                title: 'Campaign Strategy',
+                description: 'Develop comprehensive marketing campaign strategy',
+                projectId: projects[2].id,
+                statusId: statuses[8].id, // Draft
+                priority: Priority.HIGH,
+                dueDate: new Date('2024-02-15'),
+                estimatedHours: 12,
+                assignedTo: users[0].id,
+                createdBy: users[0].id
+            }
+        }),
+        prisma.task.create({
+            data: {
+                title: 'Social Media Content',
+                description: 'Create social media posts and graphics',
+                projectId: projects[2].id,
+                statusId: statuses[9].id, // In Review
+                priority: Priority.MEDIUM,
+                dueDate: new Date('2024-02-20'),
+                estimatedHours: 16,
+                assignedTo: users[3].id,
+                createdBy: users[0].id
             }
         })
     ])
 
-    console.log('✅ Created sample tasks')
+    console.log('✅ Created tasks')
 
-    console.log('🎉 Database seeding completed successfully!')
-    console.log(`📊 Created:`)
-    console.log(`   - ${users.length} users`)
-    console.log(`   - ${projects.length} projects`)
-    console.log(`   - ${projectStatuses.length} project statuses`)
-    console.log(`   - ${emailThreads.length} email threads`)
-    console.log(`   - ${messages1.length + messages2.length} email messages`)
-    console.log(`   - ${timelineViews.length} timeline views`)
-    console.log(`   - ${timelineEvents.length} timeline events`)
-    console.log(`   - ${tasks.length} tasks`)
+    // Create some subtasks
+    await Promise.all([
+        prisma.subtask.create({
+            data: {
+                taskId: tasks[0].id,
+                title: 'Create wireframes',
+                isCompleted: true,
+                order: 1
+            }
+        }),
+        prisma.subtask.create({
+            data: {
+                taskId: tasks[0].id,
+                title: 'Design mockups',
+                isCompleted: true,
+                order: 2
+            }
+        }),
+        prisma.subtask.create({
+            data: {
+                taskId: tasks[0].id,
+                title: 'Get stakeholder approval',
+                isCompleted: false,
+                order: 3
+            }
+        }),
+        prisma.subtask.create({
+            data: {
+                taskId: tasks[1].id,
+                title: 'Create navigation component',
+                isCompleted: false,
+                order: 1
+            }
+        }),
+        prisma.subtask.create({
+            data: {
+                taskId: tasks[1].id,
+                title: 'Add mobile responsiveness',
+                isCompleted: false,
+                order: 2
+            }
+        })
+    ])
+
+    console.log('✅ Created subtasks')
+
+    // Create some task comments
+    await Promise.all([
+        prisma.taskComment.create({
+            data: {
+                taskId: tasks[0].id,
+                userId: users[1].id,
+                content: 'Great progress on the design! The new layout looks much cleaner.'
+            }
+        }),
+        prisma.taskComment.create({
+            data: {
+                taskId: tasks[0].id,
+                userId: users[2].id,
+                content: 'Thanks! I\'ll have the stakeholder review ready by tomorrow.'
+            }
+        }),
+        prisma.taskComment.create({
+            data: {
+                taskId: tasks[1].id,
+                userId: users[3].id,
+                content: 'Starting work on the navigation component today.'
+            }
+        })
+    ])
+
+    console.log('✅ Created task comments')
+
+    // Create project tags
+    await Promise.all([
+        prisma.projectTag.create({
+            data: {
+                projectId: projects[0].id,
+                name: 'Frontend',
+                color: '#3B82F6'
+            }
+        }),
+        prisma.projectTag.create({
+            data: {
+                projectId: projects[0].id,
+                name: 'Design',
+                color: '#8B5CF6'
+            }
+        }),
+        prisma.projectTag.create({
+            data: {
+                projectId: projects[0].id,
+                name: 'SEO',
+                color: '#10B981'
+            }
+        }),
+        prisma.projectTag.create({
+            data: {
+                projectId: projects[1].id,
+                name: 'Mobile',
+                color: '#F59E0B'
+            }
+        }),
+        prisma.projectTag.create({
+            data: {
+                projectId: projects[1].id,
+                name: 'iOS',
+                color: '#000000'
+            }
+        }),
+        prisma.projectTag.create({
+            data: {
+                projectId: projects[1].id,
+                name: 'Android',
+                color: '#3DDC84'
+            }
+        }),
+        prisma.projectTag.create({
+            data: {
+                projectId: projects[2].id,
+                name: 'Social Media',
+                color: '#E4405F'
+            }
+        }),
+        prisma.projectTag.create({
+            data: {
+                projectId: projects[2].id,
+                name: 'Content',
+                color: '#6B7280'
+            }
+        })
+    ])
+
+    console.log('✅ Created project tags')
+
+    // Create milestones
+    await Promise.all([
+        prisma.milestone.create({
+            data: {
+                projectId: projects[0].id,
+                title: 'Design Phase Complete',
+                description: 'All design work completed and approved',
+                dueDate: new Date('2024-02-28'),
+                isCompleted: false
+            }
+        }),
+        prisma.milestone.create({
+            data: {
+                projectId: projects[0].id,
+                title: 'Development Phase Complete',
+                description: 'All development work completed',
+                dueDate: new Date('2024-03-31'),
+                isCompleted: false
+            }
+        }),
+        prisma.milestone.create({
+            data: {
+                projectId: projects[0].id,
+                title: 'Website Launch',
+                description: 'Website goes live',
+                dueDate: new Date('2024-04-15'),
+                isCompleted: false
+            }
+        }),
+        prisma.milestone.create({
+            data: {
+                projectId: projects[1].id,
+                title: 'Planning Complete',
+                description: 'App planning and design phase complete',
+                dueDate: new Date('2024-04-01'),
+                isCompleted: false
+            }
+        }),
+        prisma.milestone.create({
+            data: {
+                projectId: projects[2].id,
+                title: 'Campaign Launch',
+                description: 'Marketing campaign goes live',
+                dueDate: new Date('2024-03-01'),
+                isCompleted: false
+            }
+        })
+    ])
+
+    console.log('✅ Created milestones')
+
+    // Create project threads
+    const threads = await Promise.all([
+        prisma.projectThread.create({
+            data: {
+                projectId: projects[0].id,
+                title: 'Design Feedback Discussion',
+                description: 'General discussion about design decisions and feedback',
+                isPinned: true,
+                createdBy: users[0].id
+            }
+        }),
+        prisma.projectThread.create({
+            data: {
+                projectId: projects[0].id,
+                title: 'Technical Implementation Questions',
+                description: 'Questions and answers about technical implementation details',
+                isPinned: false,
+                createdBy: users[1].id
+            }
+        }),
+        prisma.projectThread.create({
+            data: {
+                projectId: projects[1].id,
+                title: 'App Architecture Discussion',
+                description: 'Discussion about the mobile app architecture and technology choices',
+                isPinned: true,
+                createdBy: users[1].id
+            }
+        }),
+        prisma.projectThread.create({
+            data: {
+                projectId: projects[2].id,
+                title: 'Campaign Strategy Brainstorming',
+                description: 'Brainstorming session for marketing campaign ideas',
+                isPinned: false,
+                createdBy: users[0].id
+            }
+        })
+    ])
+
+    console.log('✅ Created project threads')
+
+    // Create thread messages
+    const messages = await Promise.all([
+        // Design Feedback Discussion messages
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[0].id,
+                content: 'I think we should go with a more minimalist approach for the homepage. The current design feels too cluttered.',
+                userId: users[0].id
+            }
+        }),
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[0].id,
+                content: 'I agree with Alice. A cleaner design would improve user experience and load times.',
+                userId: users[1].id
+            }
+        }),
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[0].id,
+                content: 'What about the color scheme? Should we stick with the current brand colors or try something new?',
+                userId: users[2].id
+            }
+        }),
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[0].id,
+                content: 'I think we should maintain brand consistency but maybe use a lighter palette for better readability.',
+                userId: users[0].id
+            }
+        }),
+
+        // Technical Implementation Questions messages
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[1].id,
+                content: 'What\'s the best approach for implementing the responsive navigation? Should we use CSS Grid or Flexbox?',
+                userId: users[1].id
+            }
+        }),
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[1].id,
+                content: 'I recommend Flexbox for the navigation. It\'s more flexible for different screen sizes and easier to maintain.',
+                userId: users[3].id
+            }
+        }),
+
+        // App Architecture Discussion messages
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[2].id,
+                content: 'Should we go with React Native or Flutter for cross-platform development?',
+                userId: users[1].id
+            }
+        }),
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[2].id,
+                content: 'React Native would be better since our team already has React experience.',
+                userId: users[2].id
+            }
+        }),
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[2].id,
+                content: 'Agreed. React Native will also make it easier to share code between web and mobile.',
+                userId: users[1].id
+            }
+        }),
+
+        // Campaign Strategy Brainstorming messages
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[3].id,
+                content: 'Let\'s brainstorm some creative campaign ideas. What channels should we focus on?',
+                userId: users[0].id
+            }
+        }),
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[3].id,
+                content: 'I think we should focus on social media and influencer partnerships.',
+                userId: users[3].id
+            }
+        }),
+        prisma.threadMessage.create({
+            data: {
+                threadId: threads[3].id,
+                content: 'What about email marketing? We have a good subscriber list we can leverage.',
+                userId: users[0].id
+            }
+        })
+    ])
+
+    console.log('✅ Created thread messages')
+
+    // Create some thread tags
+    await Promise.all([
+        prisma.threadTag.create({
+            data: {
+                threadId: threads[0].id,
+                name: 'Design',
+                color: '#8B5CF6'
+            }
+        }),
+        prisma.threadTag.create({
+            data: {
+                threadId: threads[0].id,
+                name: 'Feedback',
+                color: '#F59E0B'
+            }
+        }),
+        prisma.threadTag.create({
+            data: {
+                threadId: threads[1].id,
+                name: 'Technical',
+                color: '#3B82F6'
+            }
+        }),
+        prisma.threadTag.create({
+            data: {
+                threadId: threads[1].id,
+                name: 'Frontend',
+                color: '#10B981'
+            }
+        }),
+        prisma.threadTag.create({
+            data: {
+                threadId: threads[2].id,
+                name: 'Architecture',
+                color: '#EF4444'
+            }
+        }),
+        prisma.threadTag.create({
+            data: {
+                threadId: threads[2].id,
+                name: 'Mobile',
+                color: '#F59E0B'
+            }
+        }),
+        prisma.threadTag.create({
+            data: {
+                threadId: threads[3].id,
+                name: 'Marketing',
+                color: '#E4405F'
+            }
+        }),
+        prisma.threadTag.create({
+            data: {
+                threadId: threads[3].id,
+                name: 'Strategy',
+                color: '#6B7280'
+            }
+        })
+    ])
+
+    console.log('✅ Created thread tags')
+
+    console.log('🎉 Database seeded successfully!')
 }
 
 main()
     .catch((e) => {
-        console.error('❌ Error during seeding:', e)
+        console.error('❌ Error seeding database:', e)
         process.exit(1)
     })
     .finally(async () => {
