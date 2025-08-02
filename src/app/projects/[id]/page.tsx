@@ -11,6 +11,9 @@ import { Separator } from "@/components/ui/separator"
 import { ProjectThreads } from "@/components/project-threads"
 import { ProjectTimeline } from "@/components/project-timeline"
 import { ProjectOverview } from "@/components/project-overview"
+import { EditProjectDialog } from "@/components/edit-project-dialog"
+import { formatProjectStatus } from "@/lib/utils"
+import { Navigation } from "@/components/navigation"
 
 interface Project {
     id: string
@@ -28,7 +31,7 @@ interface Project {
         id: string
         name: string
         email: string
-        avatar: string
+        image: string
     }
     members: Array<{
         id: string
@@ -37,7 +40,7 @@ interface Project {
             id: string
             name: string
             email: string
-            avatar: string
+            image: string
         }
     }>
     _count: {
@@ -99,6 +102,7 @@ export default function ProjectPage() {
 
     return (
         <div className="min-h-screen bg-background">
+            <Navigation />
             <div className="container mx-auto px-4 py-8">
                 {/* Project Header */}
                 <div className="mb-8">
@@ -107,7 +111,7 @@ export default function ProjectPage() {
                             <h1 className="text-4xl font-bold tracking-tight">{project.name}</h1>
                             <p className="text-muted-foreground text-lg">{project.description}</p>
                             <div className="flex items-center space-x-4">
-                                <Badge variant="outline">{project.status}</Badge>
+                                <Badge variant="outline">{formatProjectStatus(project.status)}</Badge>
                                 <Badge variant="outline">{project.priority}</Badge>
                                 {project.client && (
                                     <span className="text-sm text-muted-foreground">
@@ -117,7 +121,10 @@ export default function ProjectPage() {
                             </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <Button variant="outline">Edit Project</Button>
+                            <EditProjectDialog
+                                project={project}
+                                onProjectUpdated={setProject}
+                            />
                             <Button>New Thread</Button>
                         </div>
                     </div>

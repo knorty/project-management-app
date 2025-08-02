@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState, useEffect } from "react"
 import { Plus, Users, Calendar, Target, DollarSign } from "lucide-react"
 import Link from "next/link"
+import { formatProjectStatus } from "@/lib/utils"
+import { Navigation } from "@/components/navigation"
 
 interface Project {
   id: string
@@ -26,7 +28,7 @@ interface Project {
     id: string
     name: string
     email: string
-    avatar: string
+    image: string
   }
   members: Array<{
     id: string
@@ -35,7 +37,7 @@ interface Project {
       id: string
       name: string
       email: string
-      avatar: string
+      image: string
     }
   }>
   _count: {
@@ -72,10 +74,8 @@ export default function Home() {
     switch (status) {
       case 'ACTIVE':
         return 'bg-green-100 text-green-800 border-green-200'
-      case 'PLANNING':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'ON_HOLD':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+        return 'bg-orange-100 text-orange-800 border-orange-200'
       case 'COMPLETED':
         return 'bg-gray-100 text-gray-800 border-gray-200'
       case 'CANCELLED':
@@ -149,6 +149,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight">Project Management</h1>
@@ -162,7 +163,7 @@ export default function Home() {
             <TabsList>
               <TabsTrigger value="all">All Projects</TabsTrigger>
               <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="planning">Planning</TabsTrigger>
+              <TabsTrigger value="on-hold">On Hold</TabsTrigger>
               <TabsTrigger value="completed">Completed</TabsTrigger>
             </TabsList>
             <Button>
@@ -199,7 +200,7 @@ export default function Home() {
                         </div>
                         <div className="flex items-center space-x-2">
                           <Badge className={getStatusColor(project.status)}>
-                            {project.status}
+                            {formatProjectStatus(project.status)}
                           </Badge>
                           <Badge className={getPriorityColor(project.priority)}>
                             {project.priority}
@@ -273,7 +274,7 @@ export default function Home() {
                             <div className="flex -space-x-2">
                               {project.members.slice(0, 3).map((member) => (
                                 <Avatar key={member.id} className="w-8 h-8 border-2 border-background">
-                                  <AvatarImage src={member.user.avatar} />
+                                  <AvatarImage src={member.user.image} />
                                   <AvatarFallback className="text-xs">
                                     {getInitials(member.user.name)}
                                   </AvatarFallback>
@@ -313,7 +314,7 @@ export default function Home() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge className={getStatusColor(project.status)}>
-                          {project.status}
+                          {formatProjectStatus(project.status)}
                         </Badge>
                         <Badge className={getPriorityColor(project.priority)}>
                           {project.priority}
@@ -358,9 +359,9 @@ export default function Home() {
             </div>
           </TabsContent>
 
-          <TabsContent value="planning" className="space-y-6">
+          <TabsContent value="on-hold" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {projects.filter(p => p.status === 'PLANNING').map((project) => (
+              {projects.filter(p => p.status === 'ON_HOLD').map((project) => (
                 <Link key={project.id} href={`/projects/${project.id}`}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardHeader>
@@ -374,7 +375,7 @@ export default function Home() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge className={getStatusColor(project.status)}>
-                          {project.status}
+                          {formatProjectStatus(project.status)}
                         </Badge>
                         <Badge className={getPriorityColor(project.priority)}>
                           {project.priority}
@@ -421,7 +422,7 @@ export default function Home() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge className={getStatusColor(project.status)}>
-                          {project.status}
+                          {formatProjectStatus(project.status)}
                         </Badge>
                       </div>
                     </CardHeader>

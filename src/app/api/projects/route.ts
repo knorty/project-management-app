@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
                         id: true,
                         name: true,
                         email: true,
-                        avatar: true
+                        image: true
                     }
                 },
                 members: {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
                                 id: true,
                                 name: true,
                                 email: true,
-                                avatar: true
+                                image: true
                             }
                         }
                     }

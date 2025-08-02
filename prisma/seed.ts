@@ -1,9 +1,13 @@
 import { PrismaClient, UserRole, ProjectRole, ProjectState, Priority } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
     console.log('🌱 Seeding database...')
+
+    // Hash password for all users
+    const hashedPassword = await bcrypt.hash('password123', 12)
 
     // Create users
     const users = await Promise.all([
@@ -11,32 +15,36 @@ async function main() {
             data: {
                 email: 'alice@example.com',
                 name: 'Alice Johnson',
+                password: hashedPassword,
                 role: UserRole.ADMIN,
-                avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
+                image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
             }
         }),
         prisma.user.create({
             data: {
                 email: 'bob@example.com',
                 name: 'Bob Smith',
+                password: hashedPassword,
                 role: UserRole.MANAGER,
-                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
+                image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
             }
         }),
         prisma.user.create({
             data: {
                 email: 'carol@example.com',
                 name: 'Carol Davis',
+                password: hashedPassword,
                 role: UserRole.MEMBER,
-                avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
+                image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
             }
         }),
         prisma.user.create({
             data: {
                 email: 'dave@example.com',
                 name: 'Dave Wilson',
+                password: hashedPassword,
                 role: UserRole.MEMBER,
-                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+                image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
             }
         })
     ])
@@ -62,7 +70,7 @@ async function main() {
             data: {
                 name: 'Mobile App Development',
                 description: 'Develop a new mobile app for iOS and Android platforms',
-                status: ProjectState.PLANNING,
+                status: ProjectState.ON_HOLD,
                 priority: Priority.MEDIUM,
                 startDate: new Date('2024-03-01'),
                 endDate: new Date('2024-08-01'),
@@ -200,8 +208,8 @@ async function main() {
         prisma.projectStatus.create({
             data: {
                 projectId: projects[1].id,
-                title: 'Planning',
-                description: 'Tasks in planning phase',
+                title: 'On Hold',
+                description: 'Tasks that are temporarily paused',
                 color: '#8B5CF6',
                 order: 1,
                 isDefault: true
@@ -341,7 +349,7 @@ async function main() {
                 title: 'App Architecture Design',
                 description: 'Design the overall app architecture and data flow',
                 projectId: projects[1].id,
-                statusId: statuses[4].id, // Planning
+                statusId: statuses[4].id, // On Hold
                 priority: Priority.HIGH,
                 dueDate: new Date('2024-03-15'),
                 estimatedHours: 24,
@@ -354,7 +362,7 @@ async function main() {
                 title: 'UI/UX Design',
                 description: 'Create app wireframes and design mockups',
                 projectId: projects[1].id,
-                statusId: statuses[4].id, // Planning
+                statusId: statuses[4].id, // On Hold
                 priority: Priority.HIGH,
                 dueDate: new Date('2024-03-20'),
                 estimatedHours: 32,

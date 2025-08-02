@@ -16,7 +16,7 @@ interface TimelineMessage {
         id: string
         name: string
         email: string
-        avatar: string
+        image: string
     }
     thread: {
         id: string
@@ -36,7 +36,7 @@ interface TimelineMessage {
             id: string
             name: string
             email: string
-            avatar: string
+            image: string
         }
     }
 }
@@ -175,7 +175,7 @@ export function ProjectTimeline({ projectId }: ProjectTimelineProps) {
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-center space-x-3">
                                                     <Avatar className="w-8 h-8">
-                                                        <AvatarImage src={message.user.avatar} />
+                                                        <AvatarImage src={message.user.image} />
                                                         <AvatarFallback>
                                                             {getInitials(message.user.name)}
                                                         </AvatarFallback>
@@ -200,7 +200,7 @@ export function ProjectTimeline({ projectId }: ProjectTimelineProps) {
                                                 <div className="mb-3 p-3 bg-muted rounded-lg">
                                                     <div className="flex items-center space-x-2 mb-1">
                                                         <Avatar className="w-5 h-5">
-                                                            <AvatarImage src={message.parent.user.avatar} />
+                                                            <AvatarImage src={message.parent.user.image} />
                                                             <AvatarFallback>
                                                                 {getInitials(message.parent.user.name)}
                                                             </AvatarFallback>

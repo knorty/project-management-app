@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Calendar, Users, DollarSign, Target } from "lucide-react"
+import { formatProjectStatus } from "@/lib/utils"
 
 interface Project {
     id: string
@@ -22,7 +23,7 @@ interface Project {
         id: string
         name: string
         email: string
-        avatar: string
+        image: string
     }
     members: Array<{
         id: string
@@ -31,7 +32,7 @@ interface Project {
             id: string
             name: string
             email: string
-            avatar: string
+            image: string
         }
     }>
 }
@@ -84,7 +85,7 @@ export function ProjectOverview({ project }: ProjectOverviewProps) {
                             <div>
                                 <label className="text-sm font-medium text-muted-foreground">Status</label>
                                 <div className="mt-1">
-                                    <Badge variant="outline">{project.status}</Badge>
+                                    <Badge variant="outline">{formatProjectStatus(project.status)}</Badge>
                                 </div>
                             </div>
                             <div>
@@ -189,7 +190,7 @@ export function ProjectOverview({ project }: ProjectOverviewProps) {
                             {/* Project Creator */}
                             <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg">
                                 <Avatar className="w-10 h-10">
-                                    <AvatarImage src={project.creator.avatar} />
+                                    <AvatarImage src={project.creator.image} />
                                     <AvatarFallback>
                                         {getInitials(project.creator.name)}
                                     </AvatarFallback>
@@ -207,7 +208,7 @@ export function ProjectOverview({ project }: ProjectOverviewProps) {
                             {project.members.map((member) => (
                                 <div key={member.id} className="flex items-center space-x-3">
                                     <Avatar className="w-8 h-8">
-                                        <AvatarImage src={member.user.avatar} />
+                                        <AvatarImage src={member.user.image} />
                                         <AvatarFallback>
                                             {getInitials(member.user.name)}
                                         </AvatarFallback>

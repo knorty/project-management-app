@@ -18,7 +18,7 @@ export async function GET(
                         id: true,
                         name: true,
                         email: true,
-                        avatar: true
+                        image: true
                     }
                 },
                 messages: {
@@ -28,7 +28,7 @@ export async function GET(
                                 id: true,
                                 name: true,
                                 email: true,
-                                avatar: true
+                                image: true
                             }
                         },
                         replies: {
@@ -38,7 +38,7 @@ export async function GET(
                                         id: true,
                                         name: true,
                                         email: true,
-                                        avatar: true
+                                        image: true
                                     }
                                 }
                             }
@@ -94,7 +94,7 @@ export async function PUT(
                         id: true,
                         name: true,
                         email: true,
-                        avatar: true
+                        image: true
                     }
                 },
                 tags: true

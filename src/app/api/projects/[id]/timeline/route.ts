@@ -25,7 +25,7 @@ export async function GET(
                         id: true,
                         name: true,
                         email: true,
-                        avatar: true
+                        image: true
                     }
                 },
                 thread: {
@@ -43,7 +43,7 @@ export async function GET(
                                 id: true,
                                 name: true,
                                 email: true,
-                                avatar: true
+                                image: true
                             }
                         }
                     }

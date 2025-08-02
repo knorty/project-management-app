@@ -23,7 +23,7 @@ export async function GET(
                         id: true,
                         name: true,
                         email: true,
-                        avatar: true
+                        image: true
                     }
                 },
                 replies: {
@@ -33,7 +33,7 @@ export async function GET(
                                 id: true,
                                 name: true,
                                 email: true,
-                                avatar: true
+                                image: true
                             }
                         },
                         attachments: true
@@ -101,7 +101,7 @@ export async function POST(
                         id: true,
                         name: true,
                         email: true,
-                        avatar: true
+                        image: true
                     }
                 },
                 attachments: true

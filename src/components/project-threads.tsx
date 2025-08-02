@@ -22,7 +22,7 @@ interface Thread {
         id: string
         name: string
         email: string
-        avatar: string
+        image: string
     }
     messages: Array<{
         id: string
@@ -32,7 +32,7 @@ interface Thread {
             id: string
             name: string
             email: string
-            avatar: string
+            image: string
         }
     }>
     tags: Array<{
@@ -206,7 +206,7 @@ export function ProjectThreads({ projectId }: ProjectThreadsProps) {
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <Avatar className="w-8 h-8">
-                                            <AvatarImage src={thread.creator.avatar} />
+                                            <AvatarImage src={thread.creator.image} />
                                             <AvatarFallback>
                                                 {getInitials(thread.creator.name)}
                                             </AvatarFallback>
@@ -245,7 +245,7 @@ export function ProjectThreads({ projectId }: ProjectThreadsProps) {
                                         <div className="border-t pt-3">
                                             <div className="flex items-start space-x-3">
                                                 <Avatar className="w-6 h-6">
-                                                    <AvatarImage src={thread.messages[0].user.avatar} />
+                                                    <AvatarImage src={thread.messages[0].user.image} />
                                                     <AvatarFallback>
                                                         {getInitials(thread.messages[0].user.name)}
                                                     </AvatarFallback>
