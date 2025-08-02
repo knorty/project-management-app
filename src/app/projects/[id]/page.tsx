@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { ProjectThreads } from "@/components/project-threads"
 import { ProjectTimeline } from "@/components/project-timeline"
 import { ProjectOverview } from "@/components/project-overview"
+import { TimeTracking } from "@/components/time-tracking"
 import { EditProjectDialog } from "@/components/edit-project-dialog"
 import { formatProjectStatus } from "@/lib/utils"
 import { Navigation } from "@/components/navigation"
@@ -170,10 +171,11 @@ export default function ProjectPage() {
 
                 {/* Main Content Tabs */}
                 <Tabs defaultValue="overview" className="space-y-6">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="overview">Overview</TabsTrigger>
                         <TabsTrigger value="threads">Threads</TabsTrigger>
                         <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                        <TabsTrigger value="time-tracking">Time Tracking</TabsTrigger>
                         <TabsTrigger value="tasks">Tasks</TabsTrigger>
                     </TabsList>
 
@@ -187,6 +189,10 @@ export default function ProjectPage() {
 
                     <TabsContent value="timeline" className="space-y-6">
                         <ProjectTimeline projectId={projectId} />
+                    </TabsContent>
+
+                    <TabsContent value="time-tracking" className="space-y-6">
+                        <TimeTracking projectId={projectId} />
                     </TabsContent>
 
                     <TabsContent value="tasks" className="space-y-6">

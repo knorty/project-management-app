@@ -31,6 +31,7 @@ model User {
   createdTasks    Task[]          @relation("TaskCreator")
   createdThreads  ProjectThread[] @relation("ThreadCreator")
   threadMessages  ThreadMessage[]
+  timeEntries     TimeEntry[]
 
   @@map("users")
 }
@@ -90,12 +91,14 @@ model Project {
   creator     User         @relation("ProjectCreator", fields: [createdBy], references: [id])
 
   // Relations
-  members    ProjectMember[]
-  statuses   ProjectStatus[]
-  tasks      Task[]
-  tags       ProjectTag[]
-  milestones Milestone[]
-  threads    ProjectThread[]
+  members           ProjectMember[]
+  statuses          ProjectStatus[]
+  tasks             Task[]
+  tags              ProjectTag[]
+  milestones        Milestone[]
+  threads           ProjectThread[]
+  timeEntries       TimeEntry[]
+  TimeEntryCategory TimeEntryCategory[]
 
   @@map("projects")
 }
@@ -165,17 +168,18 @@ model Task {
   updatedAt      DateTime  @updatedAt
 
   // Relations
-  project    Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  status     ProjectStatus  @relation(fields: [statusId], references: [id])
-  assignee   User?          @relation("TaskAssignee", fields: [assignedTo], references: [id])
-  creator    User           @relation("TaskCreator", fields: [createdBy], references: [id])
-  comments   TaskComment[]
-  activities TaskActivity[]
-  subtasks   Subtask[]
-  parentTask String?
-  parent     Task?          @relation("TaskSubtasks", fields: [parentTask], references: [id])
-  children   Task[]         @relation("TaskSubtasks")
-  tags       TaskTag[]
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status      ProjectStatus  @relation(fields: [statusId], references: [id])
+  assignee    User?          @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  creator     User           @relation("TaskCreator", fields: [createdBy], references: [id])
+  comments    TaskComment[]
+  activities  TaskActivity[]
+  subtasks    Subtask[]
+  parentTask  String?
+  parent      Task?          @relation("TaskSubtasks", fields: [parentTask], references: [id])
+  children    Task[]         @relation("TaskSubtasks")
+  tags        TaskTag[]
+  timeEntries TimeEntry[]
 
   @@map("tasks")
 }
@@ -319,6 +323,49 @@ model ThreadTag {
 
   @@unique([threadId, name])
   @@map("thread_tags")
+}
+
+model TimeEntry {
+  id          String    @id @default(cuid())
+  projectId   String
+  taskId      String?
+  userId      String
+  categoryId  String?
+  description String
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int? // Duration in seconds
+  isRunning   Boolean   @default(false)
+  billable    Boolean   @default(true)
+  hourlyRate  Float?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  project  Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task     Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category TimeEntryCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@map("time_entries")
+}
+
+model TimeEntryCategory {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  color     String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  timeEntries TimeEntry[]
+
+  @@unique([projectId, name])
+  @@map("time_entry_categories")
 }
 
 // Enums

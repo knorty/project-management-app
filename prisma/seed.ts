@@ -789,6 +789,166 @@ async function main() {
 
     console.log('✅ Created thread tags')
 
+    // Create time entry categories for each project
+    const timeCategories = await Promise.all([
+        // Website Redesign categories
+        prisma.timeEntryCategory.create({
+            data: {
+                projectId: projects[0].id,
+                name: 'Design',
+                color: '#8B5CF6',
+                isDefault: true
+            }
+        }),
+        prisma.timeEntryCategory.create({
+            data: {
+                projectId: projects[0].id,
+                name: 'Development',
+                color: '#3B82F6'
+            }
+        }),
+        prisma.timeEntryCategory.create({
+            data: {
+                projectId: projects[0].id,
+                name: 'Testing',
+                color: '#10B981'
+            }
+        }),
+        // Mobile App categories
+        prisma.timeEntryCategory.create({
+            data: {
+                projectId: projects[1].id,
+                name: 'Frontend Development',
+                color: '#3B82F6',
+                isDefault: true
+            }
+        }),
+        prisma.timeEntryCategory.create({
+            data: {
+                projectId: projects[1].id,
+                name: 'Backend Development',
+                color: '#EF4444'
+            }
+        }),
+        prisma.timeEntryCategory.create({
+            data: {
+                projectId: projects[1].id,
+                name: 'UI/UX Design',
+                color: '#8B5CF6'
+            }
+        }),
+        // Marketing Campaign categories
+        prisma.timeEntryCategory.create({
+            data: {
+                projectId: projects[2].id,
+                name: 'Strategy',
+                color: '#6B7280',
+                isDefault: true
+            }
+        }),
+        prisma.timeEntryCategory.create({
+            data: {
+                projectId: projects[2].id,
+                name: 'Content Creation',
+                color: '#F59E0B'
+            }
+        }),
+        prisma.timeEntryCategory.create({
+            data: {
+                projectId: projects[2].id,
+                name: 'Social Media',
+                color: '#E4405F'
+            }
+        })
+    ])
+
+    console.log('✅ Created time entry categories')
+
+    // Create sample time entries
+    const now = new Date()
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+
+    await Promise.all([
+        // Website Redesign time entries
+        prisma.timeEntry.create({
+            data: {
+                projectId: projects[0].id,
+                userId: users[0].id,
+                categoryId: timeCategories[0].id,
+                description: 'Homepage design mockups',
+                startTime: new Date(yesterday.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
+                endTime: new Date(yesterday.getTime() - 60 * 60 * 1000), // 1 hour ago
+                duration: 3600, // 1 hour in seconds
+                billable: true,
+                hourlyRate: 75.0,
+                notes: 'Created wireframes and mockups for homepage redesign'
+            }
+        }),
+        prisma.timeEntry.create({
+            data: {
+                projectId: projects[0].id,
+                userId: users[1].id,
+                categoryId: timeCategories[1].id,
+                description: 'Frontend implementation',
+                startTime: new Date(yesterday.getTime() - 4 * 60 * 60 * 1000), // 4 hours ago
+                endTime: new Date(yesterday.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
+                duration: 7200, // 2 hours in seconds
+                billable: true,
+                hourlyRate: 65.0,
+                notes: 'Implemented responsive design components'
+            }
+        }),
+        // Mobile App time entries
+        prisma.timeEntry.create({
+            data: {
+                projectId: projects[1].id,
+                userId: users[2].id,
+                categoryId: timeCategories[3].id,
+                description: 'App wireframing',
+                startTime: new Date(twoDaysAgo.getTime() - 3 * 60 * 60 * 1000), // 3 hours ago
+                endTime: new Date(twoDaysAgo.getTime() - 60 * 60 * 1000), // 1 hour ago
+                duration: 7200, // 2 hours in seconds
+                billable: true,
+                hourlyRate: 70.0,
+                notes: 'Created wireframes for main app screens'
+            }
+        }),
+        // Marketing Campaign time entries
+        prisma.timeEntry.create({
+            data: {
+                projectId: projects[2].id,
+                userId: users[3].id,
+                categoryId: timeCategories[6].id,
+                description: 'Campaign strategy planning',
+                startTime: new Date(now.getTime() - 90 * 60 * 1000), // 1.5 hours ago
+                endTime: new Date(now.getTime() - 30 * 60 * 1000), // 30 minutes ago
+                duration: 3600, // 1 hour in seconds
+                billable: true,
+                hourlyRate: 55.0,
+                notes: 'Developed Q2 marketing strategy and timeline'
+            }
+        }),
+        // Currently running time entry
+        prisma.timeEntry.create({
+            data: {
+                projectId: projects[0].id,
+                userId: users[0].id,
+                categoryId: timeCategories[1].id,
+                description: 'Bug fixes and optimization',
+                startTime: new Date(now.getTime() - 45 * 60 * 1000), // 45 minutes ago
+                endTime: null,
+                duration: null,
+                isRunning: true,
+                billable: true,
+                hourlyRate: 75.0,
+                notes: 'Working on performance optimization and bug fixes'
+            }
+        })
+    ])
+
+    console.log('✅ Created time entries')
+
     console.log('🎉 Database seeded successfully!')
 }
 
